@@ -5,6 +5,7 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from droplet import Droplet
 
 class AlienInvasion: 
     """Overall class to manage game """
@@ -21,6 +22,7 @@ class AlienInvasion:
         pygame.display.set_caption("Alien Invasion")
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        self.droplets = pygame.sprite.Group()
         # set background color 
         self.bg_color = (230, 230, 230)
         
@@ -30,6 +32,7 @@ class AlienInvasion:
             self._check_events()
             self.ship.update()
             self._update_bullets()
+            self._update_droplets()
             self._update_screen()
             self.clock.tick(60)
     
@@ -44,6 +47,7 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+                
     def _fire_bullet(self):
         """Crete a new bullet and add it to the bullets group."""
         if len(self.bullets) < self.settings.bullets_allowed:
@@ -59,11 +63,27 @@ class AlienInvasion:
             if bullet.rect.right >= self.screen.get_rect().right:
                 self.bullets.remove(bullet)         
         # print(len(self.bullets)) <- This is to make sure bullets are deleted.
+    def _update_droplets(self):
+        self.droplets.update()
+        for droplet in self.droplets.copy():
+            if droplet.rect.bottom > self.screen.get_rect().bottom:
+                self.droplets.remove(droplet)
+        droplet = Droplet(self)
+        droplet_width = droplet.rect.width
+        droplet_height = droplet.rect.height
+        current_x = droplet_width
+        while current_x < (self.settings.screen_width -2 * droplet_width):
+            new_droplet = Droplet(self)
+            new_droplet.x = current_x
+            new_droplet.rect.x = current_x
+            self.droplets.add(new_droplet)
+            current_x += 2 * droplet_width     
     def _update_screen(self):
         # Redraw the screen during each pass through the loop.
             self.screen.fill(self.settings.bg_color)
             for bullet in self.bullets.sprites():
                 bullet.draw_bullet()
+            self.droplets.draw(self.screen)
             self.ship.blitme()     
             # Make the most recently drawn screen visible.
             pygame.display.flip()
