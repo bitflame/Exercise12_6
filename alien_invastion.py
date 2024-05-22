@@ -5,6 +5,7 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
+from alien import Alien
 
 class AlienInvasion: 
     """Overall class to manage game """
@@ -21,9 +22,35 @@ class AlienInvasion:
         pygame.display.set_caption("Alien Invasion")
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
+        self.aliens = pygame.sprite.Group()
+        self._create_fleet()
         # set background color 
         self.bg_color = (230, 230, 230)
         
+    def _create_fleet(self):
+        """Create the fleet of aliens"""
+        # Crete an alien and keep adding aliens until there's no room 
+        # Spacing between aliens is one alien width
+        alien = Alien(self)
+        alien_width, alien_height = alien.rect.size
+        current_x = self.settings.screen_width -3 * alien_width
+        current_y = alien_height 
+        while current_x > (3 * alien_width):
+            while current_y < (self.settings.screen_height - 2 * alien_height):
+                self._create_alien(current_x, current_y)
+                current_y += 2 * alien_height
+            # Finish a column, reset y value, and decrement x
+            current_y = alien_height
+            current_x -= 2 * alien_width
+            
+    def _create_alien(self, x_position, y_position):
+        """Create an alien and place it in the row"""
+        new_alien = Alien(self)
+        new_alien.y = y_position
+        new_alien.rect.y = y_position
+        new_alien.rect.x = x_position
+        self.aliens.add(new_alien)   
+         
     def run_game(self):
         """Start the main loop fo the game"""
         while True:
@@ -44,6 +71,7 @@ class AlienInvasion:
                 self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
+                
     def _fire_bullet(self):
         """Crete a new bullet and add it to the bullets group."""
         if len(self.bullets) < self.settings.bullets_allowed:
@@ -59,14 +87,17 @@ class AlienInvasion:
             if bullet.rect.right >= self.screen.get_rect().right:
                 self.bullets.remove(bullet)         
         # print(len(self.bullets)) <- This is to make sure bullets are deleted.
+        
     def _update_screen(self):
         # Redraw the screen during each pass through the loop.
             self.screen.fill(self.settings.bg_color)
             for bullet in self.bullets.sprites():
                 bullet.draw_bullet()
-            self.ship.blitme()     
+            self.ship.blitme()   
+            self.aliens.draw(self.screen)  
             # Make the most recently drawn screen visible.
             pygame.display.flip()
+            
     def _check_keydown_events(self, event):
         """Respond to keypresses."""
         if event.key == pygame.K_UP:
