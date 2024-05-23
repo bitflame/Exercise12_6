@@ -50,13 +50,27 @@ class AlienInvasion:
         new_alien.rect.y = y_position
         new_alien.rect.x = x_position
         self.aliens.add(new_alien)   
-         
+        
+    def _check_fleet_edges(self):
+        """Respond appropriately if any aliens have reached an edge"""
+        for alien in self.aliens.sprites():
+            if alien.check_edges():
+                self._change_fleet_direction()
+                break
+            
+    def _change_fleet_direction(self):
+        """Move the entire fleet closer to rocket on the left side of the screen"""
+        for alien in self.aliens.sprites():
+            alien.rect.x -= self.settings.fleet_drop_speed
+        self.settings.fleet_direction *= -1
+                 
     def run_game(self):
         """Start the main loop fo the game"""
         while True:
             self._check_events()
             self.ship.update()
             self._update_bullets()
+            self._update_aliens()
             self._update_screen()
             self.clock.tick(60)
     
@@ -78,6 +92,11 @@ class AlienInvasion:
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
                 
+    def _update_aliens(self):
+        """Update the positions of all alisens in the fleet"""
+        self._check_fleet_edges()
+        self.aliens.update()
+        
     def _update_bullets(self):
         """Update postion of bullets adn get rigd fo old bullets"""
         #update bullet position
